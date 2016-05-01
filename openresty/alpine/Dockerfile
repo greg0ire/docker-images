@@ -37,7 +37,7 @@ RUN set -xe \
         && readonly NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) \
         && ./configure \
             --prefix=${OPENRESTY_PREFIX} \
-            --sbin-path=/usr/sbin/nginx \
+            --sbin-path=${OPENRESTY_PREFIX}/nginx/bin/nginx \
             --conf-path=/etc/nginx/nginx.conf \
             --error-log-path=/var/log/nginx/error.log \
             --http-log-path=/var/log/nginx/access.log \
@@ -96,33 +96,22 @@ RUN set -xe \
             --with-lua-include=${OPENRESTY_PREFIX}/luajit/include/luajit-${LUA_JIT_VERSION} \
         && make \
         && make install \
+        && ln -sf $OPENRESTY_PREFIX/nginx/bin/nginx /usr/sbin/nginx \
         && ln -sf $OPENRESTY_PREFIX/luajit/bin/luajit-* $OPENRESTY_PREFIX/luajit/bin/lua \
         && ln -sf $OPENRESTY_PREFIX/luajit/bin/luajit-* /usr/sbin/lua \ 
-
-        && strip /usr/sbin/nginx* \
-        #&& strip /usr/lib/nginx/modules/*.so \
+        && ln -sf $OPENRESTY_PREFIX/luajit/bin/luarocks /usr/sbin/luarocks \
+        && ln -sf $OPENRESTY_PREFIX/luajit/bin/luarocks-admin /usr/sbin/luarocks-admin \
         && runDeps="$( \
-            scanelf --needed --nobanner /usr/sbin/nginx \
+            scanelf --needed --nobanner --recursive $OPENRESTY_PREFIX \
                 | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
                 | sort -u \
                 | xargs -r apk info --installed \
                 | sort -u \
         )" \
-    
-        && apk add --virtual .nginx-rundeps $runDeps \
+        && apk add --virtual .php-rundeps $runDeps \
         && apk del .build-deps \
-        && apk add --no-cache gettext \
-            libpcrecpp \
-            libpcre16 \
-            libpcre32 \
-            openssl \
-            libssl1.0 \
-            pcre \
-            libgcc \
-            libstdc++ \
-
         && rm -rf /var/cache/apk/* /tmp/* \
-   
+
         # forward request and error logs to docker log collector
         && ln -sf /dev/stdout /var/log/nginx/access.log \
         && ln -sf /dev/stderr /var/log/nginx/error.log
