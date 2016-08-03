@@ -57,8 +57,6 @@ RUN set -xe \
         && apk add --virtual .phpext-rundeps $runDeps \
         && apk del .phpext-builddeps \
 
-        && cp /usr/src/php/php.ini-production $PHP_INI_DIR/php.ini \
-
         # Opcache settings
         && { \
             echo 'opcache.memory_consumption=128'; \
