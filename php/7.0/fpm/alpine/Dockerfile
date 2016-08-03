@@ -81,4 +81,4 @@ RUN set -xe \
         && rm -rf /tmp/* /var/cache/apk/*
 
 
-WORKDIR /srv 
+WORKDIR /srv
