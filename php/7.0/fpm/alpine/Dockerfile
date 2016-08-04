@@ -57,8 +57,6 @@ RUN set -xe \
         && apk add --virtual .phpext-rundeps $runDeps \
         && apk del .phpext-builddeps \
 
-        && cp /usr/src/php/php.ini-production $PHP_INI_DIR/php.ini \
-
         # Opcache settings
         && { \
             echo 'opcache.memory_consumption=128'; \
@@ -73,7 +71,10 @@ RUN set -xe \
         && echo "date.timezone=${PHP_TIMEZONE:-UTC}" > $PHP_INI_DIR/conf.d/date_timezone.ini \
 
         # install composer
-        && wget -O /usr/local/bin/composer https://getcomposer.org/composer.phar \
+        && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+        && php -r "if (hash_file('SHA384', 'composer-setup.php') === 'e115a8dc7871f15d853148a7fbac7da27d6c0030b848d9b3dc09e2a0388afed865e6a3d6b3c0fad45c48e2b5fc1196ae') { echo 'Installer verified';  } else { echo 'Installer corrupt'; unlink('composer-setup.php');  } echo PHP_EOL;" \
+        && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
+        && rm composer-setup.php \
         && chmod +x /usr/local/bin/composer \
         && composer self-update \
 
@@ -81,4 +82,4 @@ RUN set -xe \
         && rm -rf /tmp/* /var/cache/apk/*
 
 
-WORKDIR /srv 
+WORKDIR /srv
