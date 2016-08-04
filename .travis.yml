@@ -1,0 +1,20 @@
+language: bash
+services: docker
+
+env:
+  - VERSION=7.0 IMAGE=php VARIANT=alpine
+  - VERSION=7.0 IMAGE=php VARIANT=fpm/alpine
+  - VERSION= IMAGE=openresty VARIANT=alpine
+  - VERSION= IMAGE=ffmpeg VARIANT=alpine
+
+before_script:
+  - env | sort
+  - cd "${IMAGE}/${VERSION}"
+  - image="digitalbackstage/${IMAGE}:${VERSION:+$VERSION-}${VARIANT}"
+  - image="${image//'/'/-}"
+
+script:
+  - docker build -t "$image" "${VARIANT:-.}"
+
+after_script:
+  - docker images
